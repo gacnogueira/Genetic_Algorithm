@@ -8,6 +8,7 @@ from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 import os
+import time
 pp = PdfPages('multipage.pdf')
 def ternary (n):
     if n == 0:
@@ -39,16 +40,16 @@ def condition_generator(r, phi, k):
 
 def update_lattice(lattice, phi, r) :
     NextL = []
+    
     for x in range(len(lattice)) : #para cada elemento da lattice
         left = ""
         right = ""
         for y in range(r, 0, -1) :
-            pos_left = x - y
-            pos_right = (x + (r - y) + 1) % len(lattice)
+            pos_left, pos_right = x - y, (x + (r - y) + 1) % len(lattice)
+            
             left += str(lattice[pos_left])
             right += str(lattice[pos_right])
-        neighbourhood = left + str(lattice[x]) + right
-        neighbourhood = int(neighbourhood, 2)
+        neighbourhood = int(left + str(lattice[x]) + right, 2)
         NextL.append(phi[neighbourhood])
     return(NextL)
 
@@ -57,64 +58,34 @@ def run_ca(lattice, phi, r) :
     matrix.append(lattice)
     new_lattice = []
     new_lattice = lattice
-    for y in range(200):
+    #elapsed_time_updatelattice = []
+    for y in range(180):
+        #start_time_updatelattice = time.time()
         matrix.append(update_lattice(new_lattice, phi, r))
         new_lattice = matrix[-1]
+        #elapsed_time_updatelattice.append(time.time() - start_time_updatelattice)
+    #print('Time for running update_lattice: ', sum(elapsed_time_updatelattice)/180, ' Total time of update lattices: ', sum(elapsed_time_updatelattice))
     return matrix
 
-def plot_and_save_ca(spacetime, k, phis) :
-    if(k == 2):
-        img_color = colors.ListedColormap(['white', 'black'])
-    else:
-        img_color = colors.ListedColormap(['white', 'black', 'yellow'])
-    nrows, ncols = 4, 4
-    figsize = [10, 10]
-    x = 0
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
-    rules = []
-    for rule in phis:
-        rules.append(rules)
-    for i, axi  in enumerate(ax.flat):
-        #axi.set_title("phi"+str(rule[x]))
-        axi.imshow(spacetime[i], cmap=img_color)
-        x += 1
-        
-    plt.show()
-    
-    
-    
-    '''
-    
-    print(spacetime)
+def plot_and_save_ca(spacetime, k) :
     if(k == 2):
         img_color = colors.ListedColormap(['white', 'black'])
     else:
         img_color = colors.ListedColormap(['white', 'black', 'yellow'])
     #SAVE TO FILE
-    pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
+
     print("...PLOTING...")
-    fig = plt.imshow(spacetime, interpolation='nearest', cmap=img_color)
-    fig.colorbar()
-    
+    plt.imshow(spacetime, interpolation='nearest', cmap=img_color)
+    plt.colorbar()
+    plt.show()
     
     print("...SAVING TO MATRIX_PLOT.pdf...")
     spacetime = np.array(spacetime)
-    fig.imsave('MATRIX_PLOT.pdf',spacetime, cmap=img_color)
+    plt.imsave('MATRIX_PLOT.pdf',spacetime, cmap=img_color)
     print("...SUCCESSFULLY SAVED...")
     
     
-    for fig in range(1, figure().number): ## will open an empty extra figure :(
-        pdf.savefig( fig )
     
-    '''
-    '''
-    print("...SAVING TO MATRIX_PLOT.pdf...")
-    spacetime = np.array(spacetime)
-    plt.savefig(pp, spacetime, cmap=img_color)
-    plt.savefig()
-    print("...SUCCESSFULLY SAVED...")
-    pp.close
-    '''
     
 def inputs():
     ls = 100 
@@ -124,19 +95,18 @@ def inputs():
     k = int(input("Insert K\n"))
     return ls, tm, phi, r, k
 
-def CA(ls, new_rules, r, k):
-    print(new_rules)
-    lattice = generate_lattice(ls, k)
+def CA():
+    #print(new_rules)
     
-
+    
+    ls, tm, phi, r, k = inputs()
+    lattice = generate_lattice(ls, k)
     Y = []
     x = []
-    print(new_rules)
-    for rule in new_rules:
-        print(rule)
-        phi = condition_generator(r, rule, k)
-        x = run_ca(lattice, phi, r)
-        Y.append(x)
+    
+    phi = condition_generator(r, phi, k)
+    x = run_ca(lattice, phi, r)
+    Y.append(x)
     mat_in_int = []
     m = len(Y)
     w = len(x[0])
@@ -145,22 +115,22 @@ def CA(ls, new_rules, r, k):
     mat_in_int = [[0]*w] * h 
     matrixes = [mat_in_int] * m
     i = 0
-    for matrix in range(len(new_rules)):
-        for row in range(len(x)):
-        #print("ROW NUMBER:", row)
-            new_row = []
-            for col in range(len(x[row])):
+    
+    for row in range(len(x)):
+    #print("ROW NUMBER:", row)
+        new_row = []
+        for col in range(len(x[row])):
 
-                #print("COL NUMBER:", col, "ELEMENT=",x[row][col])
-                new_row.append(int(x[row][col]))
-                continue
-            #print(mat_in_int[row], x[row])
-            mat_in_int[row] = new_row
-        matrixes[matrix] = mat_in_int
+            #print("COL NUMBER:", col, "ELEMENT=",x[row][col])
+            new_row.append(int(x[row][col]))
+            continue
+        #print(mat_in_int[row], x[row])
+        mat_in_int[row] = new_row
+       
 
     
     
-    plot_and_save_ca(matrixes, k, new_rules)
+    plot_and_save_ca(mat_in_int, k)
     
     
 
